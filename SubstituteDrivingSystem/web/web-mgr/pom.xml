@@ -5,24 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>SubstituteDrivingSystem</groupId>
-        <artifactId>SubstituteDrivingSystem</artifactId>
+        <artifactId>web</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>service</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>service-map</module>
-        <module>service-driver</module>
-        <module>service-coupon</module>
-        <module>service-rules</module>
-        <module>service-dispatch</module>
-        <module>service-mq</module>
-        <module>service-order</module>
-        <module>service-payment</module>
-        <module>service-cusomer</module>
-        <module>service-system</module>
-    </modules>
+    <artifactId>web-mgr</artifactId>
+
     <dependencies>
         <dependency>
             <groupId>SubstituteDrivingSystem</groupId>
@@ -34,7 +22,6 @@
             <artifactId>common-log</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-
         <dependency>
             <groupId>SubstituteDrivingSystem</groupId>
             <artifactId>service-system-client</artifactId>
@@ -62,12 +49,22 @@
         </dependency>
         <dependency>
             <groupId>SubstituteDrivingSystem</groupId>
+            <artifactId>service-map-client</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>SubstituteDrivingSystem</groupId>
             <artifactId>service-rules-client</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>SubstituteDrivingSystem</groupId>
-            <artifactId>service-map-client</artifactId>
+            <artifactId>service-dispatch-client</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>SubstituteDrivingSystem</groupId>
+            <artifactId>service-payment-client</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
@@ -101,6 +98,12 @@
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
