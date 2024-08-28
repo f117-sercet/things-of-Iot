@@ -1,6 +1,7 @@
 package com.daijia.common.aspect;
 
 import com.daijia.common.annoation.Log;
+import com.daijia.model.entity.system.SysOperLog;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
