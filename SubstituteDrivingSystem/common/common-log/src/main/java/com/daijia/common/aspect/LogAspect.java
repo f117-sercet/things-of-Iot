@@ -7,16 +7,23 @@ import com.daijia.common.util.IpUtil;
 import com.daijia.model.entity.system.SysOperLog;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Description： TODO
@@ -96,6 +103,87 @@ public class LogAspect {
      * @throws Exception
      */
     private void getControllerMethodDescription(JoinPoint joinPoint, Log log, SysOperLog operLog, Object jsonResult) {
+
+        // 设置action动作
+        operLog.setBusinessType(log.businessType().name());
+        // 设置标题
+        operLog.setTitle(log.title());
+
+        // 设置操作人员类别
+        operLog.setOperatorType(log.operatorType().name());
+
+        // 是否需要保存request,参数和值
+        if (log.isSaveRequestData()) {
+
+            // 获取参数的信息,并且传入到数据库中
+            setRequestValue(joinPoint,operLog);
+        }
+        // 是否需要保存response,参数和值
+        if (log.isSaveRequestData() && null!=jsonResult) {
+            operLog.setJsonResult(JSON.toJSONString(jsonResult));
+        }
+    }
+
+    /**
+     * 获取请求参数,放到log中
+     * @param joinPoint
+     * @param operLog
+     */
+
+    private void setRequestValue(JoinPoint joinPoint, SysOperLog operLog) {
+
+        String requestMethod = operLog.getRequestMethod();
+        if (HttpMethod.PUT.name().equals(requestMethod) || HttpMethod.POST.name().equals(requestMethod)) {
+            
+            String params = argsArrayToString(joinPoint.getArgs());
+            
+            operLog.setOperParam(params);
+            
+            
+        }
+    }
+
+    /**
+     * 参数拼接
+     * @param paramsArray
+     * @return
+     */
+    @SneakyThrows
+    private String argsArrayToString(Object[] paramsArray) {
+
+        String params = "";
+
+        if (paramsArray!=null && paramsArray.length >0) {
+            for (Object o : paramsArray) {
+                if (null!=o && !isFilterObject(o)) {
+                    Object jsonObj = JSON.toJSON(o);
+                    params+=jsonObj.toString()+"";
+                }
+            }
+        }
+        return params.trim();
+    }
+
+    private boolean isFilterObject( final Object o) {
+        Class<?> clazz = o.getClass();
+        if (clazz.isArray()) {
+            return clazz.getComponentType().isAssignableFrom(MultipartFile.class);
+        } else if (Collection.class.isAssignableFrom(clazz)) {
+
+            Collection collection = (Collection) o;
+            for (Object value : collection) {
+                return value instanceof MultipartFile;
+            }
+
+        } else if (Map.class.isAssignableFrom(clazz)) {
+            Map map = (Map)o;
+            for (Object value : map.entrySet()) {
+                Map.Entry entry = (Map.Entry) value;
+                return entry.getValue() instanceof MultipartFile;
+            }
+        }
+        return o instanceof MultipartFile || o instanceof HttpServletRequest || o instanceof HttpServletResponse
+                || o instanceof BindingResult;
     }
 
 }
