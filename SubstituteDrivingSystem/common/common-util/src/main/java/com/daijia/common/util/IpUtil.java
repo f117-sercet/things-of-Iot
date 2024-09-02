@@ -15,7 +15,7 @@ import java.util.IllegalFormatCodePointException;
  * @create: Created in 2024/8/22 9:49
  */
 public class IpUtil {
-    public String getIpAddress(HttpServletRequest request) {
+    public static String getIpAddress(HttpServletRequest request) {
         String ipAddress = null;
         try {
             ipAddress = request.getHeader("x-forwarder-for");
