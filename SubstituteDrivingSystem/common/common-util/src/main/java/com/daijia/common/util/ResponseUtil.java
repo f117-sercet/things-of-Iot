@@ -1,6 +1,5 @@
 package com.daijia.common.util;
-
-import com.atguigu.daijia.common.result.Result;
+import com.daijia.common.result.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
