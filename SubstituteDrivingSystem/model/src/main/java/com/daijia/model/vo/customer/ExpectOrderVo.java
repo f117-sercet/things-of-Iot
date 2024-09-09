@@ -1,7 +1,6 @@
 package com.daijia.model.vo.customer;
-
-import com.atguigu.daijia.model.vo.map.DrivingLineVo;
-import com.atguigu.daijia.model.vo.rules.FeeRuleResponseVo;
+import com.daijia.model.vo.map.DrivingLineVo;
+import com.daijia.model.vo.rules.FeeRuleResponseVo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

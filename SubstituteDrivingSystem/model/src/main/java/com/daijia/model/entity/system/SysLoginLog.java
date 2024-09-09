@@ -7,6 +7,8 @@ import com.daijia.model.entity.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 @Schema(description = "SysLoginLog")
 @TableName("sys_login_log")

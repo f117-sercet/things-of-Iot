@@ -2,9 +2,13 @@ package com.daijia.customer.service.impl;
 
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
+import cn.binarywang.wx.miniapp.bean.WxMaPhoneNumberInfo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.daijia.common.exeception.BusinessException;
+import com.daijia.common.result.ResultCodeEnum;
+import com.daijia.customer.controller.CustomerInfoController;
 import com.daijia.customer.mapper.CustomerInfoMapper;
 import com.daijia.customer.mapper.CustomerLoginLogMapper;
 import com.daijia.customer.service.CustomerInfoService;
@@ -14,8 +18,11 @@ import com.daijia.model.form.customer.UpdateWxPhoneForm;
 import com.daijia.model.vo.customer.CustomerLoginVo;
 import jakarta.annotation.Resource;
 import lombok.SneakyThrows;
+import me.chanjar.weixin.common.error.WxErrorException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 /**
  * Description： TODO
@@ -34,6 +41,8 @@ public class CustomerInfoServiceImpl extends ServiceImpl<CustomerInfoMapper, Cus
 
     @Resource
     private CustomerLoginLogMapper customerLoginLogMapper;
+    @Autowired
+    private CustomerInfoController customerInfoController;
 
     @Override
     @SneakyThrows
@@ -69,16 +78,47 @@ public class CustomerInfoServiceImpl extends ServiceImpl<CustomerInfoMapper, Cus
 
     @Override
     public CustomerLoginVo getCustomerInfo(Long customerId) {
-        return null;
-    }
 
+        // 1. 根据用户Id查询用户信息
+        CustomerInfo customerInfo = customerInfoMapper.selectById(customerId);
+
+        // 2.封装到CustomerLoginVo
+        CustomerLoginVo customerLoginVo = new CustomerLoginVo();
+        BeanUtils.copyProperties(customerLoginVo,customerLoginVo);
+
+        String phone = customerInfo.getPhone();
+        boolean isBindPhone = StringUtils.hasText(phone);
+        customerLoginVo.setIsBindPhone(isBindPhone);
+
+        // 3,CustomerLoginVo返回
+        return customerLoginVo;
+    }
     @Override
     public Boolean updateWxPhoneNumber(UpdateWxPhoneForm updateWxPhoneForm) {
-        return null;
+        //1 根据code值获取微信绑定手机号码
+        try {
+            WxMaPhoneNumberInfo phoneNoInfo =
+                    wxMaService.getUserService().getPhoneNoInfo(updateWxPhoneForm.getCode());
+            String phoneNumber = phoneNoInfo.getPhoneNumber();
+
+            //更新用户信息
+            Long customerId = updateWxPhoneForm.getCustomerId();
+            CustomerInfo customerInfo = customerInfoMapper.selectById(customerId);
+            customerInfo.setPhone(phoneNumber);
+            customerInfoMapper.updateById(customerInfo);
+
+            return true;
+        } catch (WxErrorException e) {
+            throw new BusinessException(ResultCodeEnum.DATA_ERROR);
+        }
     }
 
     @Override
     public String getCustomerOpenId(Long customerId) {
-        return "";
+
+        LambdaQueryWrapper<CustomerInfo>wrapper= new LambdaQueryWrapper<>();
+        wrapper.eq(CustomerInfo::getId,customerId);
+        CustomerInfo customerInfo = customerInfoMapper.selectOne(wrapper);
+        return customerInfo.getWxOpenId();
     }
 }

@@ -17,7 +17,7 @@ public interface CustomerInfoService extends IService<CustomerInfo> {
     Long login(String code);
 
     // 获取客户登录信息
-    CustomerLoginVo getCustomerInf(Long customerId);
+    CustomerLoginVo getCustomerInfo(Long customerId);
 
     // 更新客户端微信手机号
     Boolean updateWxPhoneNumber(UpdateWxPhoneForm updateWxPhoneForm);

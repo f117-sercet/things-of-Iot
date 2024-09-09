@@ -1,7 +1,7 @@
 package com.daijia.model.vo.order;
 
-import com.atguigu.daijia.model.vo.customer.CustomerInfoVo;
-import com.atguigu.daijia.model.vo.driver.DriverInfoVo;
+import com.daijia.model.vo.customer.CustomerInfoVo;
+import com.daijia.model.vo.driver.DriverInfoVo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
