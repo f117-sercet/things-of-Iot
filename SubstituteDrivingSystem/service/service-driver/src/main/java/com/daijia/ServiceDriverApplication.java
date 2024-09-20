@@ -12,8 +12,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @aate: Created in 2024/9/11 18:26
  */
 @SpringBootApplication
-@EnableDiscoveryClient
-@EnableFeignClients
+
+//@EnableDiscoveryClient
+//@EnableFeignClients
 public class ServiceDriverApplication {
     public static void main(String[] args) {
         SpringApplication.run(ServiceDriverApplication.class, args);
