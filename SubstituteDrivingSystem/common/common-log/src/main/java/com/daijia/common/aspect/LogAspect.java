@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,16 @@ public class LogAspect {
     public void doAfterReturning(JoinPoint joinPoint, Log controllerLog, Object jsonResult){
         handleLog(joinPoint, controllerLog, null, jsonResult);
         
+    }
+    /**
+     * 拦截异常操作
+     *
+     * @param joinPoint 切点
+     * @param e         异常
+     */
+    @AfterThrowing(value = "@annotation(controllerLog)", throwing = "e")
+    public void doAfterThrowing(JoinPoint joinPoint, Log controllerLog, Exception e) {
+        handleLog(joinPoint, controllerLog, e, null);
     }
 
     /**
