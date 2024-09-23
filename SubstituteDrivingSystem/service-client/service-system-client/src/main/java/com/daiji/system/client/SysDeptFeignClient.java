@@ -3,10 +3,7 @@ package com.daiji.system.client;
 import com.daijia.common.result.Result;
 import com.daijia.model.entity.system.SysDept;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,8 +19,22 @@ public interface SysDeptFeignClient {
     @GetMapping("/sysDept/getById/{id}")
     Result<SysDept> getById(@PathVariable Long id);
 
-    @PostMapping("/sysDept/getById/{id}")
+    @PostMapping("/sysDept/save")
     Result<Boolean> save(@RequestBody SysDept sysDept);
+
+    @PutMapping("/sysDept/update")
+    Result<Boolean> update(@RequestBody SysDept sysDept);
+
+    @DeleteMapping("/sysDept/remove/{id}")
+    Result<Boolean> remove(@PathVariable Long id);
+
+    /**
+     * 获取全部部门节点
+     *
+     * @return
+     */
+    @GetMapping("/sysDept/findNodes")
+    Result<List<SysDept>> findNodes();
 
     /**
      * 获取用户部门节点
@@ -42,5 +53,4 @@ public interface SysDeptFeignClient {
      */
     @GetMapping("/sysDept/updateStatus/{id}/{status}")
     Result<Boolean> updateStatus(@PathVariable Long id, @PathVariable Integer status);
-
 }
