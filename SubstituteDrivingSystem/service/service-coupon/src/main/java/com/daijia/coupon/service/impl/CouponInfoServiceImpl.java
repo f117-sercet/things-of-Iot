@@ -26,9 +26,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Description： TODO
@@ -51,12 +53,17 @@ public class CouponInfoServiceImpl extends ServiceImpl<CouponInfoMapper, CouponI
 
 
     @Override
-    public PageVo<NoReceiveCouponVo> findNoReceivePage(Page<CouponInfo> pageParam, Long customerId) {
-
+    public PageVo<UsedCouponVo> findUsedPage(Page<CouponInfo> pageParam, Long customerId) {
         IPage<UsedCouponVo> pageInfo = couponInfoMapper.findUsedPage(pageParam, customerId);
         return new PageVo(pageInfo.getRecords(), pageInfo.getPages(), pageInfo.getTotal());
     }
 
+    @Override
+    public PageVo<NoReceiveCouponVo> findNoReceivePage(Page<CouponInfo> pageParam, Long customerId) {
+
+        IPage<NoReceiveCouponVo> pageInfo = couponInfoMapper.findNoReceivePage(pageParam, customerId);
+        return new PageVo(pageInfo.getRecords(), pageInfo.getPages(), pageInfo.getTotal());
+}
     @Override
     public PageVo<NoUseCouponVo> findNoUsePage(Page<CouponInfo> pageParam, Long customerId) {
         IPage<NoUseCouponVo> pageInfo = couponInfoMapper.findNoUsePage(pageParam, customerId);
@@ -119,16 +126,47 @@ public class CouponInfoServiceImpl extends ServiceImpl<CouponInfoMapper, CouponI
 
     @Override
     public List<AvailableCouponVo> findAvailableCoupon(Long customerId, BigDecimal orderAmount) {
+
+        // 1.创建List 集合,存储最终返回数据
+        ArrayList<AvailableCouponVo> availableCouponVoList = new ArrayList<>();
+
+        // 2.根据乘客Id,获取乘客已经领取但是没有使用的优惠券列表
+        List<NoUseCouponVo> list = couponInfoMapper.findNoUseList(customerId);
+
+        // 3.遍历乘客未使用的优惠券，得到每个优惠券
+        // 3.1判断优惠券类型:现金券和折扣券
+        List<NoUseCouponVo> typeList = list.stream().filter(item -> item.getCouponType() == 1).collect(Collectors.toList());
+        // 3.2 是现金券
+        // 判断现金是否满足条件
+        for (NoUseCouponVo noUseCouponVo : typeList) {
+
+            // 判断使用门槛
+            // 减免金额
+            BigDecimal reduceAmount = noUseCouponVo.getAmount();
+            // 1.没有门槛 ==0，订单金额必须大于优惠减免金额
+            if (noUseCouponVo.getConditionAmount().doubleValue() ==0
+                    && orderAmount.subtract(reduceAmount).doubleValue()>0) {
+                availableCouponVoList.add(this.buildBestNoUseCouponVo(noUseCouponVo,reduceAmount));
+            }
+            // 2.有门槛，，订单金额大于优惠门槛金额
+
+            if(noUseCouponVo.getConditionAmount().doubleValue() > 0
+                    && orderAmount.subtract(noUseCouponVo.getConditionAmount()).doubleValue()>0) {
+                availableCouponVoList.add(this.buildBestNoUseCouponVo(noUseCouponVo,reduceAmount));
+            }
+        }
+        //3.3折扣券
+        // 判断折扣券是否满足条件
+
+        // 4.把满足条件优惠券放到最终list集合
+
+        // 5.如果满足条件，更新两张数据
+
         return List.of();
     }
 
     @Override
     public BigDecimal useCoupon(UseCouponForm useCouponForm) {
-        return null;
-    }
-
-    @Override
-    public PageVo<UsedCouponVo> findUsedPage(Page<CouponInfo> pageParam, Long customerId) {
         return null;
     }
 
