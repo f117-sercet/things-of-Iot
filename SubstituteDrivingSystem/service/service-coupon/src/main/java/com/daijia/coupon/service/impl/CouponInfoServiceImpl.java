@@ -22,13 +22,14 @@ import jakarta.annotation.Resource;
 import net.sf.jsqlparser.statement.select.KSQLWindow;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.math.RoundingMode;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -126,47 +127,143 @@ public class CouponInfoServiceImpl extends ServiceImpl<CouponInfoMapper, CouponI
 
     @Override
     public List<AvailableCouponVo> findAvailableCoupon(Long customerId, BigDecimal orderAmount) {
+//1 创建list集合，存储最终返回数据
+        List<AvailableCouponVo> availableCouponVoList = new ArrayList<>();
 
-        // 1.创建List 集合,存储最终返回数据
-        ArrayList<AvailableCouponVo> availableCouponVoList = new ArrayList<>();
-
-        // 2.根据乘客Id,获取乘客已经领取但是没有使用的优惠券列表
+        //2 根据乘客id，获取乘客已经领取但是没有使用的优惠卷列表
+        //返回list集合
         List<NoUseCouponVo> list = couponInfoMapper.findNoUseList(customerId);
 
-        // 3.遍历乘客未使用的优惠券，得到每个优惠券
-        // 3.1判断优惠券类型:现金券和折扣券
-        List<NoUseCouponVo> typeList = list.stream().filter(item -> item.getCouponType() == 1).collect(Collectors.toList());
-        // 3.2 是现金券
-        // 判断现金是否满足条件
-        for (NoUseCouponVo noUseCouponVo : typeList) {
+        //3 遍历乘客未使用优惠卷列表，得到每个优惠卷
+        //3.1 判断优惠卷类型：现金卷 和 折扣卷
+        List<NoUseCouponVo> typeList =
+                list.stream().filter(item -> item.getCouponType() == 1).collect(Collectors.toList());
 
-            // 判断使用门槛
-            // 减免金额
+        //3.2 是现金券
+        //判断现金卷是否满足条件
+        for(NoUseCouponVo noUseCouponVo:typeList) {
+            //判断使用门槛
+            //减免金额
             BigDecimal reduceAmount = noUseCouponVo.getAmount();
-            // 1.没有门槛 ==0，订单金额必须大于优惠减免金额
-            if (noUseCouponVo.getConditionAmount().doubleValue() ==0
+            //1 没有门槛  == 0，订单金额必须大于优惠减免金额
+            if(noUseCouponVo.getConditionAmount().doubleValue()==0
                     && orderAmount.subtract(reduceAmount).doubleValue()>0) {
                 availableCouponVoList.add(this.buildBestNoUseCouponVo(noUseCouponVo,reduceAmount));
             }
-            // 2.有门槛，，订单金额大于优惠门槛金额
 
+            //2 有门槛  ，订单金额大于优惠门槛金额
             if(noUseCouponVo.getConditionAmount().doubleValue() > 0
                     && orderAmount.subtract(noUseCouponVo.getConditionAmount()).doubleValue()>0) {
                 availableCouponVoList.add(this.buildBestNoUseCouponVo(noUseCouponVo,reduceAmount));
             }
         }
-        //3.3折扣券
-        // 判断折扣券是否满足条件
 
-        // 4.把满足条件优惠券放到最终list集合
+        //3.3 折扣卷
+        //判断折扣卷是否满足条件
+        List<NoUseCouponVo> typeList2 =
+                list.stream().filter(item -> item.getCouponType() == 2).collect(Collectors.toList());
+        for (NoUseCouponVo noUseCouponVo : typeList2) {
+            //折扣之后金额
+            // 100 打8折  = 100 * 8 /10= 80
+            BigDecimal discountAmount = orderAmount.multiply(noUseCouponVo.getDiscount())
+                    .divide(new BigDecimal("10")).setScale(2, RoundingMode.HALF_UP);
 
-        // 5.如果满足条件，更新两张数据
+            BigDecimal reduceAmount = orderAmount.subtract(discountAmount);
+            //2.2.1.没门槛
+            if (noUseCouponVo.getConditionAmount().doubleValue() == 0) {
+                availableCouponVoList.add(this.buildBestNoUseCouponVo(noUseCouponVo, reduceAmount));
+            }
+            //2.2.2.有门槛，订单折扣后金额大于优惠券门槛金额
+            if (noUseCouponVo.getConditionAmount().doubleValue() > 0
+                    && discountAmount.subtract(noUseCouponVo.getConditionAmount()).doubleValue() > 0) {
+                availableCouponVoList.add(this.buildBestNoUseCouponVo(noUseCouponVo, reduceAmount));
+            }
+        }
 
-        return List.of();
+        //4 把满足条件优惠卷放到最终list集合
+        //根据金额排序
+        if (!CollectionUtils.isEmpty(availableCouponVoList)) {
+            Collections.sort(availableCouponVoList, new Comparator<AvailableCouponVo>() {
+                @Override
+                public int compare(AvailableCouponVo o1, AvailableCouponVo o2) {
+                    return o1.getReduceAmount().compareTo(o2.getReduceAmount());
+                }
+            });
+        }
+
+        return availableCouponVoList;
     }
 
     @Override
     public BigDecimal useCoupon(UseCouponForm useCouponForm) {
+        //1 根据乘客优惠券id获取乘客优惠卷信息
+        CustomerCoupon customerCoupon =
+                customerCouponMapper.selectById(useCouponForm.getCustomerCouponId());
+        if(customerCoupon == null) {
+            throw new BusinessException(ResultCodeEnum.DATA_ERROR);
+        }
+        //2 根据优惠卷id获取优惠卷信息
+        CouponInfo couponInfo =
+                couponInfoMapper.selectById(customerCoupon.getCouponId());
+        if(couponInfo == null) {
+            throw new BusinessException(ResultCodeEnum.DATA_ERROR);
+        }
+
+        //3 判断优惠卷是否是当前乘客所持有的
+        if(customerCoupon.getCustomerId() != useCouponForm.getCustomerId()) {
+            throw new BusinessException(ResultCodeEnum.DATA_ERROR);
+        }
+
+        //4 判断是否具备优惠卷使用条件
+        //现金和折扣卷，根据使用门槛判断
+        BigDecimal reduceAmount = null;
+        //1 现金券
+        if(couponInfo.getCouponType() == 1) {
+            //没有门槛，订单金额大于优惠减免金额
+            if(couponInfo.getConditionAmount().doubleValue()==0
+                    && useCouponForm.getOrderAmount().subtract(couponInfo.getAmount()).doubleValue()>0) {
+                reduceAmount = couponInfo.getAmount();
+            }
+
+            //有门槛，订单金额大于优惠卷门槛金额
+            if(couponInfo.getConditionAmount().doubleValue()>0
+                    && useCouponForm.getOrderAmount().subtract(couponInfo.getConditionAmount()).doubleValue()>0) {
+                reduceAmount = couponInfo.getAmount();
+            }
+        } else {//2 折扣
+            //折扣后金额
+            BigDecimal discountOrderAmount = useCouponForm.getOrderAmount().multiply(couponInfo.getDiscount())
+                    .divide(new BigDecimal("10")).setScale(2, RoundingMode.HALF_UP);
+            //订单优惠金额
+            //2.2.1.没门槛
+            if (couponInfo.getConditionAmount().doubleValue() == 0) {
+                //减免金额
+                reduceAmount = useCouponForm.getOrderAmount().subtract(discountOrderAmount);
+            }
+            //2.2.2.有门槛，订单折扣后金额大于优惠券门槛金额
+            if (couponInfo.getConditionAmount().doubleValue() > 0 && discountOrderAmount.subtract(couponInfo.getConditionAmount()).doubleValue() > 0) {
+                //减免金额
+                reduceAmount = useCouponForm.getOrderAmount().subtract(discountOrderAmount);
+            }
+        }
+
+        //5 如果满足条件，更新两张表数据
+        if(reduceAmount.doubleValue()>0) {
+            //更新coupon_info使用数量
+            //根据id查询优惠卷对象
+            Integer useCount_old = couponInfo.getUseCount();
+            couponInfo.setUseCount(useCount_old+1);
+            couponInfoMapper.updateById(couponInfo);
+
+            //更新customer_coupon
+            CustomerCoupon updateCustomerCoupon = new CustomerCoupon();
+            updateCustomerCoupon.setId(customerCoupon.getId());
+            updateCustomerCoupon.setUsedTime(new Date());
+            updateCustomerCoupon.setOrderId(useCouponForm.getOrderId());
+            customerCouponMapper.updateById(updateCustomerCoupon);
+
+            return reduceAmount;
+        }
         return null;
     }
 
@@ -180,6 +277,16 @@ public class CouponInfoServiceImpl extends ServiceImpl<CouponInfoMapper, CouponI
         customerCoupon.setStatus(1);
         customerCouponMapper.insert(customerCoupon);
 
+
+    }
+
+    private AvailableCouponVo buildBestNoUseCouponVo(NoUseCouponVo noUseCouponVo, BigDecimal reduceAmount) {
+
+        AvailableCouponVo bestNoUserCouponVo = new AvailableCouponVo();
+        BeanUtils.copyProperties(noUseCouponVo,bestNoUserCouponVo);
+        bestNoUserCouponVo.setCouponId(noUseCouponVo.getId());
+        bestNoUserCouponVo.setReduceAmount(reduceAmount);
+        return  bestNoUserCouponVo;
 
     }
 }
