@@ -11,6 +11,7 @@
 
     <artifactId>service-client</artifactId>
     <packaging>pom</packaging>
+    <version>1.0</version>
     <modules>
         <module>service-coupon-client</module>
         <module>service-customer-client</module>
