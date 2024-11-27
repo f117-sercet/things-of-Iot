@@ -3,20 +3,25 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.0.5</version>
+        <!-- 版本对应： https://start.spring.io/actuator/info -->
     </parent>
 
-
-    <groupId>SubstituteDrivingSystem</groupId>
-    <artifactId>SubstituteDrivingSystem</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>com.atguigu.daijia</groupId>
+    <artifactId>daijia-parent</artifactId>
     <packaging>pom</packaging>
+    <version>1.0</version>
+
     <modules>
+        <module>common</module>
+        <module>model</module>
+        <module>service</module>
+        <module>web</module>
+        <module>server-gateway</module>
+        <module>service-client</module>
     </modules>
 
     <properties>
@@ -43,10 +48,9 @@
         <!-- https://seata.io/zh-cn/docs/overview/what-is-seata.html -->
         <seata.version>1.7.1</seata.version>
         <drools.version>8.41.0.Final</drools.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-                <!--配置dependencyManagement锁定依赖的版本-->
 
+    <!--配置dependencyManagement锁定依赖的版本-->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -94,19 +98,7 @@
                 <groupId>com.qcloud</groupId>
                 <artifactId>vod_api</artifactId>
                 <version>${vod_api.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-log4j12</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
-            <!--<dependency>
-
-                    <groupId>com.qcloud</groupId>
-                    <artifactId>vod_api</artifactId>
-                    <version>2.1.4</version>
-            </dependency>-->
 
             <!-- minio -->
             <dependency>
@@ -165,15 +157,10 @@
                 <version>${commons-io.version}</version>
             </dependency>
 
-           <!-- <dependency>
-                <groupId>io.seata</groupId>
-                <artifactId>seata-all</artifactId>
-                <version>${seata.version}</version>
-            </dependency>-->
             <dependency>
                 <groupId>io.seata</groupId>
                 <artifactId>seata-all</artifactId>
-                <version>1.4.2</version>
+                <version>${seata.version}</version>
             </dependency>
 
             <!-- drools lib -->
