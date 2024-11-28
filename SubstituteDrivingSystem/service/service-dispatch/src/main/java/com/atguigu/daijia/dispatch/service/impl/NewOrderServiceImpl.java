@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.atguigu.daijia.common.constant.RedisConstant;
 import com.atguigu.daijia.dispatch.mapper.OrderJobMapper;
 import com.atguigu.daijia.dispatch.service.NewOrderService;
+import com.atguigu.daijia.dispatch.xxl.client.XxlJobClient;
 import com.atguigu.daijia.map.client.LocationFeignClient;
 import com.atguigu.daijia.model.entity.dispatch.OrderJob;
 import com.atguigu.daijia.model.enums.OrderStatus;
@@ -13,6 +14,7 @@ import com.atguigu.daijia.model.vo.map.NearByDriverVo;
 import com.atguigu.daijia.model.vo.order.NewOrderDataVo;
 import com.atguigu.daijia.order.client.OrderInfoFeignClient;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,11 +48,29 @@ public class NewOrderServiceImpl implements NewOrderService {
     @Override
     public Long addAndStartTask(NewOrderTaskVo newOrderTaskVo) {
         //1.判断当前订单是否启动任务调度
+        LambdaQueryWrapper<OrderJob> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderJob::getOrderId, newOrderTaskVo.getOrderId());
+        OrderJob orderJob = orderJobMapper.selectOne(wrapper);
+
         //2.没有启动进行操作
-        //3.记录任务调度信息
+        if (orderJob==null) {
+            // 创建并启动任务调度
+            // String executorHandler 执行任务 job方法
+            // String param
+            // String corn 执行corn 表达式
+            // String desc 描述信息
+            Long jobId = xxlJobClient.addAndStart("newOrderTaskHandler", "",
+                    "0 0/1 * * * ?",
+                    "新创建订单任务调度：" + newOrderTaskVo.getOrderId());
 
-
-        return 0;
+            //3.记录任务调度信息
+            orderJob = new OrderJob();
+            orderJob.setOrderId(newOrderTaskVo.getOrderId());
+            orderJob.setJobId(jobId);
+            orderJob.setParameter(JSONObject.toJSONString(newOrderTaskVo));
+            orderJobMapper.insert(orderJob);
+        }
+        return orderJob.getJobId();
     }
 
     @Override
