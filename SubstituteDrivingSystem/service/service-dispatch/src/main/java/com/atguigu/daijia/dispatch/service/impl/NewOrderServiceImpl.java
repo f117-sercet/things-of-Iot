@@ -80,6 +80,7 @@ public class NewOrderServiceImpl implements NewOrderService {
 
     @Override
     public List<NewOrderDataVo> findNewOrderQueueData(Long driverId) {
+        // 真的累，不想干了
         return List.of();
     }
 
