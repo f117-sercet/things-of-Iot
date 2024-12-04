@@ -76,11 +76,25 @@ public class NewOrderServiceImpl implements NewOrderService {
     @Override
     public void executeTask(long jobId) {
 
+        //1.根据JobId查询数据库，当前任务是否已经创建
+        // 如果没有创建，不往下执行
+        LambdaQueryWrapper<OrderJob> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderJob::getOrderId,jobId);
+        OrderJob orderJob = orderJobMapper.selectOne(wrapper);
+        if (orderJob ==null) {
+
+            return;
+        }
+        //2.查询订单状态，如果当前订单接单，继续执行。如果当前订单不是接单状态，停止任务调度
+        //3.远程调用:如果附近满足条件可以接单司机
+        //4.远程调用之后，获取满足可以接单的司机集合
+        //5 遍历司机集合，得到每个司机，为每个司机创建临时队列，存储新订单信息
+
     }
 
     @Override
     public List<NewOrderDataVo> findNewOrderQueueData(Long driverId) {
-        // 真的累，不想干了
+        //以自己的意志抵达结局吧~
         return List.of();
     }
 
