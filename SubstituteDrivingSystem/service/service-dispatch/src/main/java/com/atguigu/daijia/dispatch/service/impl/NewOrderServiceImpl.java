@@ -44,7 +44,8 @@ public class NewOrderServiceImpl implements NewOrderService {
 
     @Resource
     private RedisTemplate redisTemplate;
-    private OrderInfoFeignClient orderInfoFeignClient;
+    /*@Resource
+    private OrderInfoFeignClient orderInfoFeignClient;*/
 
     @Override
     public Long addAndStartTask(NewOrderTaskVo newOrderTaskVo) {
