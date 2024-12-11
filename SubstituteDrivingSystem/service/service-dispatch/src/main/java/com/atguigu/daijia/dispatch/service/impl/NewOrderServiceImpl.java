@@ -149,11 +149,24 @@ public class NewOrderServiceImpl implements NewOrderService {
     @Override
     public List<NewOrderDataVo> findNewOrderQueueData(Long driverId) {
         //以自己的意志抵达结局吧~
-        return List.of();
+        ArrayList<NewOrderDataVo> list = new ArrayList<>();
+        String key = RedisConstant.DRIVER_ORDER_TEMP_LIST + driverId;
+        Long size = redisTemplate.opsForList().size(key);
+        if (size > 0) {
+            for(int i=0; i<size;i++){
+                String content = (String) redisTemplate.opsForList().leftPop(key);
+                NewOrderDataVo newOrderDataVo = JSONObject.parseObject(content, NewOrderDataVo.class);
+               list.add(newOrderDataVo);
+            }
+
+        }
+        return list;
     }
 
     @Override
     public Boolean clearNewOrderQueueData(Long driverId) {
-        return null;
+        String key = RedisConstant.DRIVER_ORDER_TEMP_LIST + driverId;
+        redisTemplate.delete(key);
+        return true;
     }
 }
