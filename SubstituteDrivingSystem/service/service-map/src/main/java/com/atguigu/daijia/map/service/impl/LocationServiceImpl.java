@@ -56,7 +56,7 @@ public class LocationServiceImpl implements LocationService {
 
     @Resource
     private MongoTemplate mongoTemplate;
-    private DriverInfoFeignClient driverInfoFeignClient;
+    //private DriverInfoFeignClient driverInfoFeignClient;
 
 
     @Override
