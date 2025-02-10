@@ -169,4 +169,6 @@ public class NewOrderServiceImpl implements NewOrderService {
         redisTemplate.delete(key);
         return true;
     }
+
+
 }
