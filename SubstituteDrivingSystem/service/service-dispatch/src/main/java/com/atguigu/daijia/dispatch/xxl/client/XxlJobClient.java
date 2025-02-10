@@ -131,6 +131,3 @@ public class XxlJobClient {
         throw new GuiguException(ResultCodeEnum.DATA_ERROR);
     }
     }
-
-
-}
