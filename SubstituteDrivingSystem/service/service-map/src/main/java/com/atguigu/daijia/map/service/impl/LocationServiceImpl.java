@@ -8,6 +8,7 @@ import com.atguigu.daijia.driver.client.DriverInfoFeignClient;
 import com.atguigu.daijia.map.repository.OrderServiceLocationRepository;
 import com.atguigu.daijia.map.service.LocationService;
 import com.atguigu.daijia.model.entity.driver.DriverSet;
+import com.atguigu.daijia.model.entity.map.OrderServiceLocation;
 import com.atguigu.daijia.model.form.map.OrderServiceLocationForm;
 import com.atguigu.daijia.model.form.map.SearchNearByDriverForm;
 import com.atguigu.daijia.model.form.map.UpdateDriverLocationForm;
@@ -18,9 +19,14 @@ import com.atguigu.daijia.model.vo.map.OrderServiceLastLocationVo;
 import com.atguigu.daijia.order.client.OrderInfoFeignClient;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -28,6 +34,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -59,14 +66,33 @@ public class LocationServiceImpl implements LocationService {
     //private DriverInfoFeignClient driverInfoFeignClient;
 
 
+
+    // 更新司机位置
     @Override
     public Boolean updateDriverLocation(UpdateDriverLocationForm updateDriverLocationForm) {
-        return null;
+
+        Point point = new Point(updateDriverLocationForm.getLongitude().doubleValue(),
+                updateDriverLocationForm.getLatitude().doubleValue());
+
+        // 添加到redis 中
+        redisTemplate.opsForGeo().add(
+                RedisConstant.DRIVER_GEO_LOCATION,
+                point,
+                updateDriverLocationForm.getDriverId().toString());
+
+        return true;
     }
 
+    // 删除司机位置信息
     @Override
     public Boolean removeDriverLocation(Long driverId) {
-        return null;
+
+        redisTemplate.opsForGeo().remove(
+                RedisConstant.DRIVER_GEO_LOCATION,
+                driverId.toString()
+        );
+
+        return true;
     }
 
 
@@ -143,25 +169,66 @@ public class LocationServiceImpl implements LocationService {
         }
         return list;
     }
-
+    // 更新订单地址到缓存
     @Override
     public Boolean updateOrderLocationToCache(UpdateOrderLocationForm updateOrderLocationForm) {
-        return null;
+
+        OrderLocationVo orderLocationVo = new OrderLocationVo();
+        orderLocationVo.setLongitude(updateOrderLocationForm.getLongitude());
+        orderLocationVo.setLatitude(updateOrderLocationForm.getLatitude());
+        String key = RedisConstant.UPDATE_ORDER_LOCATION + updateOrderLocationForm.getOrderId();;
+
+        redisTemplate.opsForValue().set(key,orderLocationVo);
+        return true;
     }
 
     @Override
     public OrderLocationVo getCacheOrderLocation(Long orderId) {
-        return null;
+
+        String key = RedisConstant.UPDATE_ORDER_LOCATION + orderId;
+        OrderLocationVo orderLocationVo = (OrderLocationVo)redisTemplate.opsForValue().get(key);
+
+        return orderLocationVo;
     }
 
     @Override
     public Boolean saveOrderServiceLocation(List<OrderServiceLocationForm> orderLocationServiceFormList) {
-        return null;
+
+        List<OrderServiceLocation> list = new ArrayList<>();
+
+        // orderServiceLocation
+        orderLocationServiceFormList.forEach(orderServiceLocationForm -> {
+            OrderServiceLocation orderServiceLocation = new OrderServiceLocation();
+            BeanUtils.copyProperties(orderServiceLocationForm,orderServiceLocation);
+            orderServiceLocation.setId(ObjectId.get().toString());
+            orderServiceLocation.setCreateTime(new Date());
+
+            list.add(orderServiceLocation);
+        });
+        // 批量添加到MongoDB
+        orderServiceLocationRepository.saveAll(list);
+
+
+        return  true;
     }
 
     @Override
     public OrderServiceLastLocationVo getOrderServiceLastLocation(Long orderId) {
-        return null;
+
+        // 查询MongoDB
+        // 查询条件:orderId
+        // 根据创建时间降序排列
+        // 最新一条数据
+
+        Query query = new Query();
+        query.addCriteria(Criteria.where("orderId").is(orderId))
+                .with(Sort.by(Sort.Order.desc("creatTime")))
+                .limit(1);
+        OrderServiceLocation orderServiceLocation = mongoTemplate.findOne(query, OrderServiceLocation.class);
+        OrderServiceLastLocationVo orderServiceLastLocationVo = new OrderServiceLastLocationVo();
+        BeanUtils.copyProperties(orderServiceLocation,orderServiceLastLocationVo);
+
+        return orderServiceLastLocationVo;
     }
 
     @Override
