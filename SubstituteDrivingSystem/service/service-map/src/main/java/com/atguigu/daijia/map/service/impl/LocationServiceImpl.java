@@ -4,6 +4,7 @@ import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.atguigu.daijia.common.constant.RedisConstant;
 import com.atguigu.daijia.common.constant.SystemConstant;
 import com.atguigu.daijia.common.result.Result;
+import com.atguigu.daijia.common.util.LocationUtil;
 import com.atguigu.daijia.driver.client.DriverInfoFeignClient;
 import com.atguigu.daijia.map.repository.OrderServiceLocationRepository;
 import com.atguigu.daijia.map.service.LocationService;
@@ -50,7 +51,6 @@ public class LocationServiceImpl implements LocationService {
 
     @Resource
     private RedisTemplate redisTemplate;
-
     @Resource
     private OrderInfoFeignClient orderInfoFeignClient;
 
@@ -64,7 +64,6 @@ public class LocationServiceImpl implements LocationService {
     @Resource
     private MongoTemplate mongoTemplate;
     //private DriverInfoFeignClient driverInfoFeignClient;
-
 
 
     // 更新司机位置
@@ -148,7 +147,7 @@ public class LocationServiceImpl implements LocationService {
                 // orderDistance ==0,司机没有限制
                 // 如果不等于0,比如30,接单30公里代驾订单
                 // 接单距离-当前单子距离 <0,不复合条件
-                if (orderDistance.doubleValue()!=0 && orderDistance.subtract(searchNearByDriverForm.getMileageDistance()).doubleValue()<0) {
+                if (orderDistance.doubleValue() != 0 && orderDistance.subtract(searchNearByDriverForm.getMileageDistance()).doubleValue() < 0) {
                     continue;
                 }
                 // 判断接单里程 accept_distance
@@ -156,7 +155,7 @@ public class LocationServiceImpl implements LocationService {
                 BigDecimal currentDistance = new BigDecimal(item.getDistance().getValue()).setScale(2, RoundingMode.HALF_UP);
                 BigDecimal acceptDistance = driverSet.getAcceptDistance();
 
-                if (acceptDistance.doubleValue() !=0 && acceptDistance.subtract(currentDistance).doubleValue()<0) {
+                if (acceptDistance.doubleValue() != 0 && acceptDistance.subtract(currentDistance).doubleValue() < 0) {
 
                     continue;
                 }
@@ -169,6 +168,7 @@ public class LocationServiceImpl implements LocationService {
         }
         return list;
     }
+
     // 更新订单地址到缓存
     @Override
     public Boolean updateOrderLocationToCache(UpdateOrderLocationForm updateOrderLocationForm) {
@@ -176,9 +176,10 @@ public class LocationServiceImpl implements LocationService {
         OrderLocationVo orderLocationVo = new OrderLocationVo();
         orderLocationVo.setLongitude(updateOrderLocationForm.getLongitude());
         orderLocationVo.setLatitude(updateOrderLocationForm.getLatitude());
-        String key = RedisConstant.UPDATE_ORDER_LOCATION + updateOrderLocationForm.getOrderId();;
+        String key = RedisConstant.UPDATE_ORDER_LOCATION + updateOrderLocationForm.getOrderId();
+        ;
 
-        redisTemplate.opsForValue().set(key,orderLocationVo);
+        redisTemplate.opsForValue().set(key, orderLocationVo);
         return true;
     }
 
@@ -186,7 +187,7 @@ public class LocationServiceImpl implements LocationService {
     public OrderLocationVo getCacheOrderLocation(Long orderId) {
 
         String key = RedisConstant.UPDATE_ORDER_LOCATION + orderId;
-        OrderLocationVo orderLocationVo = (OrderLocationVo)redisTemplate.opsForValue().get(key);
+        OrderLocationVo orderLocationVo = (OrderLocationVo) redisTemplate.opsForValue().get(key);
 
         return orderLocationVo;
     }
@@ -199,7 +200,7 @@ public class LocationServiceImpl implements LocationService {
         // orderServiceLocation
         orderLocationServiceFormList.forEach(orderServiceLocationForm -> {
             OrderServiceLocation orderServiceLocation = new OrderServiceLocation();
-            BeanUtils.copyProperties(orderServiceLocationForm,orderServiceLocation);
+            BeanUtils.copyProperties(orderServiceLocationForm, orderServiceLocation);
             orderServiceLocation.setId(ObjectId.get().toString());
             orderServiceLocation.setCreateTime(new Date());
 
@@ -209,7 +210,7 @@ public class LocationServiceImpl implements LocationService {
         orderServiceLocationRepository.saveAll(list);
 
 
-        return  true;
+        return true;
     }
 
     @Override
@@ -226,13 +227,42 @@ public class LocationServiceImpl implements LocationService {
                 .limit(1);
         OrderServiceLocation orderServiceLocation = mongoTemplate.findOne(query, OrderServiceLocation.class);
         OrderServiceLastLocationVo orderServiceLastLocationVo = new OrderServiceLastLocationVo();
-        BeanUtils.copyProperties(orderServiceLocation,orderServiceLastLocationVo);
+        BeanUtils.copyProperties(orderServiceLocation, orderServiceLastLocationVo);
 
         return orderServiceLastLocationVo;
     }
 
     @Override
     public BigDecimal calculateOrderRealDistance(Long orderId) {
-        return null;
+
+        // 1.根据订单orderId查询list
+        List<OrderServiceLocation> list = orderServiceLocationRepository.findByOrderIdByCreateTimeAsc(orderId);
+
+        // 2.第一步查询返回订单位置信息
+        double realDistance = 0;
+        if (!CollectionUtils.isEmpty(list)) {
+            for (int i = 0, size = list.size() - 1; i < size; i++) {
+
+                OrderServiceLocation location1 = list.get(i);
+                OrderServiceLocation location2 = list.get(i + 1);
+
+                // 计算位置距离
+                double distance = LocationUtil.getDistance(location1.getLatitude().doubleValue(),
+                        location1.getLongitude().doubleValue(),
+                        location2.getLatitude().doubleValue(),
+                        location2.getLongitude().doubleValue());
+                realDistance += distance;
+            }
+        }
+        //TODO 测试用
+        if (realDistance == 0) {
+            return orderInfoFeignClient.getOrderInfo(orderId).getData().getExpectDistance().add(new BigDecimal("5"));
+        }
+
+        // 3.返回最终计算的实际距离
+
+
+        return  new BigDecimal(realDistance);
     }
-}
+    }
+
