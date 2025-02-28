@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class RewardRuleServiceImpl implements RewardRuleService {
+
+    private static final String RULES_CUSTOMER_RULES_DRL = "rules/RewardRule.drl";
+
     @Override
     public RewardRuleResponseVo calculateOrderRewardFee(RewardRuleRequestForm rewardRuleRequestForm) {
         return null;
