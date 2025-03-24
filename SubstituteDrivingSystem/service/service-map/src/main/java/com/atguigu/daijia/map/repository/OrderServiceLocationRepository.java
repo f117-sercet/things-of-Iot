@@ -17,5 +17,5 @@ public interface OrderServiceLocationRepository
         extends MongoRepository<OrderServiceLocation,String> {
 
     //  根据订单id获取代驾订单位置信息,根据创建时间排序(升序)
-    List<OrderServiceLocation> findByOrderIdByCreateTimeAsc(Long orderId);
+    List<OrderServiceLocation> findByOrderIdOrderByCreateTimeAsc(Long orderId);
 }

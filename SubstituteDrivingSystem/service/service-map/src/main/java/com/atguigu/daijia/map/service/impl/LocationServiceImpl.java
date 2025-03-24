@@ -53,8 +53,6 @@ public class LocationServiceImpl implements LocationService {
     private RedisTemplate redisTemplate;
     @Resource
     private OrderInfoFeignClient orderInfoFeignClient;
-
-    @Autowired
     @Resource
     private DriverInfoFeignClient driverInfoFeignClient;
 
@@ -236,7 +234,7 @@ public class LocationServiceImpl implements LocationService {
     public BigDecimal calculateOrderRealDistance(Long orderId) {
 
         // 1.根据订单orderId查询list
-        List<OrderServiceLocation> list = orderServiceLocationRepository.findByOrderIdByCreateTimeAsc(orderId);
+        List<OrderServiceLocation> list = orderServiceLocationRepository.findByOrderIdOrderByCreateTimeAsc(orderId);
 
         // 2.第一步查询返回订单位置信息
         double realDistance = 0;
