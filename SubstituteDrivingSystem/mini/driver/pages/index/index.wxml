@@ -1,0 +1,14 @@
+<!--index.wxml-->
+        <!--地图--->
+<view class="data-v-83a5a03c">
+  <map id="map" longitude="{{longtitude}}" latitude="{{latitude}}" scale="15"enable-traffic="{{false}}" show-location="{{true}}"enable-poi="{{true}}" class="map data-v-83a5a03c">
+    </map>
+</view>
+<view class="location-panel data-v-83a5a03c">
+<view class="data-v-83a5a03c">
+  <van-button type="primary"  size="large">开始接单</van-button>
+</view>
+</view>
+        <!---底部--->
+<view></view>
+
