@@ -8,8 +8,21 @@ Page({
    */
   data: {
    longtitude:null,
-   latitude:null
+   latitude:null,
+   loading:true,
+   active:0,
   },
+
+
+  onChange(event){
+    this.setData({
+   active:event.detail
+    })
+    console.log("event",event.detail)
+    console.log("active",this.data.active)
+  },
+
+
 
   /**
    * 生命周期函数--监听页面加载

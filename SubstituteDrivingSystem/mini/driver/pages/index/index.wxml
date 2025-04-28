@@ -6,9 +6,12 @@
 </view>
 <view class="location-panel data-v-83a5a03c">
 <view class="data-v-83a5a03c">
-  <van-button type="primary"  size="large">开始接单</van-button>
+  <van-button type="info"  size="large">开始接单</van-button>
 </view>
 </view>
         <!---底部--->
-<view></view>
+<van-tabbar active="{{active}}" class="data-v-83a5a03c" bind:change="onChange">
+  <van-tabbar-item  icon="home-o">首页</van-tabbar-item>
+  <van-tabbar-item  icon="friends-o">个人</van-tabbar-item>
+</van-tabbar>
 
