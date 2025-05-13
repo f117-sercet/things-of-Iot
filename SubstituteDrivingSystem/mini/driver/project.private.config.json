@@ -1,0 +1,66 @@
+{
+  "description": "项目配置文件。",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "setting": {
+    "urlCheck": false,
+    "bigPackageSizeSupport": true,
+    "compileHotReLoad": true
+  },
+  "compileType": "miniprogram",
+  "libVersion": "trial",
+  "appid": "wx10644b72cd540849",
+  "projectname": "driver",
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "测试页-首页",
+          "pathName": "pages/index/index",
+          "query": ""
+        },
+        {
+          "name": "测试页-个人中心",
+          "pathName": "pages/userCenter/userCenter",
+          "query": ""
+        },
+        {
+          "name": "测试页-确认订单",
+          "pathName": "pages/creatOrder/creatOrder",
+          "query": ""
+        },
+        {
+          "name": "测试页-订单列表",
+          "pathName": "pages/orderList/orderList",
+          "query": ""
+        },
+        {
+          "name": "测试页-订单详情",
+          "pathName": "pages/orderDetail/orderDetail",
+          "query": ""
+        },
+        {
+          "name": "测试页-登陆",
+          "pathName": "pages/login/login",
+          "query": ""
+        },
+        {
+          "name": "测试页-基本信息",
+          "pathName": "pages/driverInformation/driverInformation",
+          "query": ""
+        },
+        {
+          "name": "测试页-上传车辆信息",
+          "pathName": "pages/collectCarInfo/collectCarInfo",
+          "query": ""
+        }
+      ]
+    }
+  },
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
+}

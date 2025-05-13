@@ -1,12 +1,16 @@
+
 <!--index.wxml-->
         <!--地图--->
-<view class="data-v-83a5a03c">
+        <view class="data-v-83a5a03c">
   <map id="map" longitude="{{longtitude}}" latitude="{{latitude}}" scale="15"enable-traffic="{{false}}" show-location="{{true}}"enable-poi="{{true}}" class="map data-v-83a5a03c">
     </map>
 </view>
 <view class="location-panel data-v-83a5a03c">
-<view class="data-v-83a5a03c">
-  <van-button type="info"  size="large">开始接单</van-button>
+<view class="data-v-83a5a03c"wx:if="{{driverStart}}">
+  <van-button type="info"  size="large" bind:tap="startTakingOrdersHandle">开始接单</van-button>
+</view>
+<view class="data-v-83a5a03c" wx:if="{{driverProcessing}}">
+<van-button loading type="info" size="large"  loading-text="正在接单...." />
 </view>
 </view>
         <!---底部--->
@@ -14,4 +18,3 @@
   <van-tabbar-item  icon="home-o">首页</van-tabbar-item>
   <van-tabbar-item  icon="friends-o">个人</van-tabbar-item>
 </van-tabbar>
-

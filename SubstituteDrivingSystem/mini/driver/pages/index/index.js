@@ -1,5 +1,4 @@
-// index.js
-const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
+
 
 Page({
 
@@ -11,6 +10,9 @@ Page({
    latitude:null,
    loading:true,
    active:0,
+   driverProcessing:false,
+   driverStart:true
+
   },
 
 
@@ -23,6 +25,18 @@ Page({
   },
 
 
+  // 司机开始接单 test1
+  startTakingOrdersHandle(){
+    let that = this
+    that.setData({
+      driverStart:false,
+      driverProcessing:true
+    })
+  
+
+  },
+
+
 
   /**
    * 生命周期函数--监听页面加载
@@ -30,7 +44,7 @@ Page({
   onLoad(options) {
   let that = this
     wx.getLocation({
-      type: 'wgs84',
+      type: 'gcj02',
       success(res) {
         console.log(res)
       that.setData({
@@ -54,6 +68,8 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+
+    console.log("123")
 
   },
 

@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "首页",
+  "navigationStyle": "custom",
+  "titlePenetrate": "YES",
+  "usingComponents": {
+    "mp-sticky": "/miniprogram_npm/@vant/weapp/sticky",
+    "van-button": "/miniprogram_npm/@vant/weapp/button/index",
+    "van-tabbar": "/miniprogram_npm/@vant/weapp/tabbar/index",
+  "van-tabbar-item": "/miniprogram_npm/@vant/weapp/tabbar-item/index"
+  }
+}
